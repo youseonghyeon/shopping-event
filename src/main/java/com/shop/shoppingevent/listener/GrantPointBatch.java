@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -24,6 +25,7 @@ public class GrantPointBatch {
     }
 
     @KafkaListener(topics = "event-point-topic", groupId = "event-point-group")
+    @Transactional
     public void listen(ConsumerRecord<String, EventPointMessage> record) {
         try {
             EventPointMessage eventPointMessage = record.value();

@@ -28,7 +28,6 @@ public class EventController {
     public ResponseEntity<EventStatusResponse> getTicketStatus() {
         int remainingTickets = getRemainingTickets();
         boolean isAvailable = remainingTickets > 0;
-
         EventStatusResponse response = new EventStatusResponse(isAvailable, remainingTickets);
         return ResponseEntity.ok(response);
     }
@@ -40,6 +39,18 @@ public class EventController {
         Long ticketCount = redisTemplate.opsForValue().increment(EVENT_TICKET_COUNT_KEY);
         Boolean isParticipated = redisTemplate.opsForSet().isMember(EVENT_PARTICIPATION_KEY, userId.toString());
 
+        /// TODO validateApplyEvent 에서 예외 발생 후 catch로 처리하도록 수정
+        ResponseEntity<EventApplyResponse> validateResponse = validateApplyEvent(isParticipated, ticketCount);
+        if (validateResponse != null)
+            return validateResponse;
+
+        eventService.saveParticipation(ticketApplyRequest.getUserId());
+        redisTemplate.opsForSet().add(EVENT_PARTICIPATION_KEY, userId.toString());
+        kafkaTemplate.send("event-point-topic", new EventPointMessage(ticketApplyRequest.getUserId(), ticketApplyRequest.getReason(), 10000, 1));
+        return ResponseEntity.ok(new EventApplyResponse(true, "이벤트 참여에 성공했습니다."));
+    }
+
+    private static ResponseEntity<EventApplyResponse> validateApplyEvent(Boolean isParticipated, Long ticketCount) {
         if (isParticipated != null && isParticipated) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new EventApplyResponse(false, "이미 이벤트에 참여하셨습니다."));
@@ -52,11 +63,7 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new EventApplyResponse(false, "모든 쿠폰이 소진되었습니다."));
         }
-
-        eventService.saveParticipation(ticketApplyRequest.getUserId());
-        redisTemplate.opsForSet().add(EVENT_PARTICIPATION_KEY, userId.toString());
-        kafkaTemplate.send("event-point-topic", new EventPointMessage(ticketApplyRequest.getUserId(), ticketApplyRequest.getReason(), 10000, 1));
-        return ResponseEntity.ok(new EventApplyResponse(true, "이벤트 참여에 성공했습니다."));
+        return null;
     }
 
     private int getRemainingTickets() {

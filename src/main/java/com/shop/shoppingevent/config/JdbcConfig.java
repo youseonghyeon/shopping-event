@@ -12,6 +12,10 @@ import javax.sql.DataSource;
 @Configuration
 public class JdbcConfig {
 
+    /**
+     * shop 데이터베이스 DataSource
+     * @return DataSource(shopdb)
+     */
     @Bean("shopDataSource")
     @ConfigurationProperties(prefix = "spring.datasource.shop")
     public DataSource shopDataSource() {
@@ -23,6 +27,10 @@ public class JdbcConfig {
         return new JdbcTemplate(shopDataSource);
     }
 
+    /**
+     * event 데이터베이스 DataSource
+     * @return DataSource(evenetdb)
+     */
     @Bean("eventDataSource")
     @ConfigurationProperties(prefix = "spring.datasource.event")
     public DataSource eventDataSource() {

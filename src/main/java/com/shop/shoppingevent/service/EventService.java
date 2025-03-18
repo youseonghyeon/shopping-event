@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 @Service
 public class EventService {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate eventJdbcTemplate;
 
-    public EventService(@Qualifier("eventJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public EventService(@Qualifier("eventJdbcTemplate") JdbcTemplate eventJdbcTemplate) {
+        this.eventJdbcTemplate = eventJdbcTemplate;
     }
 
     @Transactional
@@ -21,6 +21,6 @@ public class EventService {
         LocalDateTime now = LocalDateTime.now();
         boolean given = false;
         String sql = "INSERT INTO participation (user_id, create_datetime, given) VALUES (?, ?, ?)";
-        jdbcTemplate.update(sql, userId, now, given);
+        eventJdbcTemplate.update(sql, userId, now, given);
     }
 }
