@@ -24,7 +24,6 @@
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
-        <logger name="org.springframework.security" level="DEBUG"/>
     </springProfile>
 
     <springProfile name="prod">

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(name = "feature.point-consumer.enabled", havingValue = "true") // 단일 서버에서만 처리
+@ConditionalOnProperty(name = "feature.point-consumer.enabled", havingValue = "true")
 public class GrantPointBatch {
 
     private final JdbcTemplate businessJdbcTemplate;

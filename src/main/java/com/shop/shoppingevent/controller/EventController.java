@@ -3,12 +3,14 @@ package com.shop.shoppingevent.controller;
 import com.shop.shoppingevent.dto.EventPointMessage;
 import com.shop.shoppingevent.service.EventService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/event")
 @RequiredArgsConstructor
@@ -35,6 +37,7 @@ public class EventController {
     // 이벤트 참여 처리
     @PostMapping("/ticket/apply")
     public ResponseEntity<EventApplyResponse> applyEvent(@RequestBody TicketApplyRequest ticketApplyRequest) {
+        log.info("Request to apply event: {}", ticketApplyRequest);
         Long userId = ticketApplyRequest.getUserId();
         Long ticketCount = redisTemplate.opsForValue().increment(EVENT_TICKET_COUNT_KEY);
         Boolean isParticipated = redisTemplate.opsForSet().isMember(EVENT_PARTICIPATION_KEY, userId.toString());
