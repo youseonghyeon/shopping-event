@@ -24,8 +24,8 @@ public class GrantPointBatch {
         this.eventJdbcTemplate = eventJdbcTemplate;
     }
 
-    @KafkaListener(topics = "event-point-topic", groupId = "event-point-group")
     @Transactional
+    @KafkaListener(topics = "event-point-topic", groupId = "event-point-group")
     public void listen(ConsumerRecord<String, EventPointMessage> record) {
         try {
             EventPointMessage eventPointMessage = record.value();

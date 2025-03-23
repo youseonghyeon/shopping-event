@@ -1,13 +1,13 @@
 #!/bin/zsh
 set -e  # 오류 발생 시 즉시 종료
 
-echo "🚀 Vue 이미지 빌드를 시작합니다..."
+echo "🚀 shopping-event 이미지 빌드를 시작합니다..."
 docker build --platform=linux/amd64 -t shopping-event:x86_64 . && echo "✅ Vue 이미지가 성공적으로 빌드되었습니다!"
 
-echo "🚀 Vue 이미지 태깅을 진행합니다..."
+echo "🚀 shopping-event 이미지 태깅을 진행합니다..."
 docker tag shopping-event:x86_64 epfzja/shopping-event:x86_64 && echo "✅ Vue 이미지가 성공적으로 태깅되었습니다!"
 
-echo "🚀 Vue 이미지를 Docker Hub로 푸시 중..."
+echo "🚀 shopping-event 이미지를 Docker Hub로 푸시 중..."
 docker push epfzja/shopping-event:x86_64 && echo "✅ Vue 이미지가 성공적으로 푸시되었습니다!"
 
 #echo "🚀 EC2 서버에서 애플리케이션 재시작..."

@@ -10,6 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Slf4j
 @RestController
 @RequestMapping("/event")
@@ -25,6 +28,8 @@ public class EventController {
     private final EventService eventService;
     private final KafkaTemplate<String, EventPointMessage> kafkaTemplate;
 
+    private final Set<Long> memoryCache = ConcurrentHashMap.newKeySet();
+
     // 현재 쿠폰 개수와 상태 체크
     @GetMapping("/ticket/status")
     public ResponseEntity<EventStatusResponse> getTicketStatus() {
@@ -39,17 +44,26 @@ public class EventController {
     public ResponseEntity<EventApplyResponse> applyEvent(@RequestBody TicketApplyRequest ticketApplyRequest) {
         log.info("Request to apply event: {}", ticketApplyRequest);
         Long userId = ticketApplyRequest.getUserId();
-        Long ticketCount = redisTemplate.opsForValue().increment(EVENT_TICKET_COUNT_KEY);
+        if (memoryCache.contains(userId)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new EventApplyResponse(false, "이미 이벤트에 참여하셨습니다."));
+        }
         Boolean isParticipated = redisTemplate.opsForSet().isMember(EVENT_PARTICIPATION_KEY, userId.toString());
+        if (isParticipated != null && isParticipated) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new EventApplyResponse(false, "이미 이벤트에 참여하셨습니다."));
+        }
+        Long ticketCount = redisTemplate.opsForValue().increment(EVENT_TICKET_COUNT_KEY);
 
         /// TODO validateApplyEvent 에서 예외 발생 후 catch로 처리하도록 수정
         ResponseEntity<EventApplyResponse> validateResponse = validateApplyEvent(isParticipated, ticketCount);
         if (validateResponse != null)
             return validateResponse;
+        redisTemplate.opsForSet().add(EVENT_PARTICIPATION_KEY, userId.toString());
 
         eventService.saveParticipation(ticketApplyRequest.getUserId());
-        redisTemplate.opsForSet().add(EVENT_PARTICIPATION_KEY, userId.toString());
         kafkaTemplate.send("event-point-topic", new EventPointMessage(ticketApplyRequest.getUserId(), ticketApplyRequest.getReason(), 10000, 1));
+        memoryCache.add(userId);
         return ResponseEntity.ok(new EventApplyResponse(true, "이벤트 참여에 성공했습니다."));
     }
 
