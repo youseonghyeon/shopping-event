@@ -31,3 +31,12 @@ spring:
 feature:
   point-consumer:
     enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
