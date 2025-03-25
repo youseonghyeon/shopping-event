@@ -1,4 +1,4 @@
-package com.shop.shoppingevent.controller;
+package com.shop.shoppingevent.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;

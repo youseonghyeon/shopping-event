@@ -1,5 +1,6 @@
 package com.shop.shoppingevent.service;
 
+import com.shop.shoppingevent.dto.EventJoinResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -7,11 +8,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 
+import static com.shop.shoppingevent.dto.EventJoinResult.*;
+
 @Service
 @RequiredArgsConstructor
 public class EventParticipationValidator {
-
-    private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String luaScriptWithoutTTL = """
             local alreadyJoined = redis.call("SISMEMBER", KEYS[1], ARGV[1])
@@ -28,6 +29,7 @@ public class EventParticipationValidator {
             redis.call("INCR", KEYS[2])
             return 1
             """;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public EventJoinResult tryParticipate(Long userId, int maxCount) {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
@@ -42,10 +44,10 @@ public class EventParticipationValidator {
         );
 
         return switch (result.intValue()) {
-            case 1 -> EventJoinResult.SUCCESS;
-            case 0 -> EventJoinResult.ALREADY_JOINED;
-            case -1 -> EventJoinResult.SOLD_OUT;
-            default -> EventJoinResult.SOLD_OUT;
+            case 1 -> SUCCESS;
+            case 0 -> ALREADY_JOINED;
+            case -1 -> SOLD_OUT;
+            default -> SOLD_OUT;
         };
     }
 }

@@ -23,4 +23,9 @@ public class EventService {
         String sql = "INSERT INTO participation (user_id, create_datetime, given) VALUES (?, ?, ?)";
         eventJdbcTemplate.update(sql, userId, now, given);
     }
+
+    public int countParticipation() {
+        // TODO 1. Redis를 이용하여 참여자 수 조회
+        return 0;
+    }
 }

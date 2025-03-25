@@ -1,6 +1,5 @@
 package com.shop.shoppingevent.config;
 
-import com.shop.shoppingevent.dto.Ticket;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

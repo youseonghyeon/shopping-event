@@ -12,6 +12,15 @@ spring:
       jdbc-url: jdbc:mysql://localhost:3306/eventdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       username: shopuser
       password: shop123
+      hikari:
+        pool-name: EventHikariCP
+        maximum-pool-size: 90
+        minimum-idle: 10
+        idle-timeout: 300000
+        max-lifetime: 600000
+        connection-timeout: 3000
+        validation-timeout: 2000
+        leak-detection-threshold: 5000
     shop:
       driver-class-name: com.mysql.cj.jdbc.Driver
       jdbc-url: jdbc:mysql://localhost:3306/shopdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
