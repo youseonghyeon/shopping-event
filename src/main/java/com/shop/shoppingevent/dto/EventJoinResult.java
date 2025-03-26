@@ -14,4 +14,8 @@ public enum EventJoinResult {
         this.message = message;
     }
 
+    public boolean isSuccess() {
+        return SUCCESS.equals(this);
+    }
+
 }

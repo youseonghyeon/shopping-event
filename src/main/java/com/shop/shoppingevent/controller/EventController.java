@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static com.shop.shoppingevent.dto.EventJoinResult.SUCCESS;
-
 @Slf4j
 @RestController
 @RequestMapping("/event")
@@ -25,7 +23,6 @@ public class EventController {
 
     private static final int EVENT_TICKET_LIMIT = 1000;
 
-    //    private final StringRedisTemplate redisTemplate;
     private final EventService eventService;
     private final KafkaTemplate<String, EventPointMessage> kafkaTemplate;
     private final EventParticipationValidator participationValidator;
@@ -53,21 +50,25 @@ public class EventController {
         Long userId = ticketApplyRequest.getUserId();
         EventJoinResult eventJoinResult = participationValidator.tryParticipate(userId, EVENT_TICKET_LIMIT);
 
-        if (!SUCCESS.equals(eventJoinResult)) {
-            return switch (eventJoinResult) {
-                case ALREADY_JOINED -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new EventApplyResponse(false, "이미 이벤트에 참여하셨습니다."));
-                case SOLD_OUT -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new EventApplyResponse(false, "모든 쿠폰이 소진되었습니다."));
-                default -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new EventApplyResponse(false, "이벤트 참여에 실패했습니다."));
-            };
+        if (!eventJoinResult.isSuccess()) {
+            return buildEventApplyErrorResponse(eventJoinResult);
         }
 
         log.info("User joined the event: {}", ticketApplyRequest);
         eventService.saveParticipation(ticketApplyRequest.getUserId());
         kafkaTemplate.send("event-point-topic", new EventPointMessage(ticketApplyRequest.getUserId(), ticketApplyRequest.getReason(), 10000, 1));
         return ResponseEntity.ok(new EventApplyResponse(true, "이벤트 참여에 성공했습니다."));
+    }
+
+    private static ResponseEntity<EventApplyResponse> buildEventApplyErrorResponse(EventJoinResult eventJoinResult) {
+        return switch (eventJoinResult) {
+            case ALREADY_JOINED -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new EventApplyResponse(false, "이미 이벤트에 참여하셨습니다."));
+            case SOLD_OUT -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new EventApplyResponse(false, "모든 쿠폰이 소진되었습니다."));
+            default -> ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new EventApplyResponse(false, "이벤트 참여에 실패했습니다."));
+        };
     }
 
     record EventStatusResponse(boolean available, int remainingTickets) {
