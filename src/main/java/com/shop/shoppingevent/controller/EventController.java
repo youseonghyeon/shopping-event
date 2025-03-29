@@ -3,6 +3,7 @@ package com.shop.shoppingevent.controller;
 import com.shop.shoppingevent.dto.EventJoinResult;
 import com.shop.shoppingevent.dto.EventPointMessage;
 import com.shop.shoppingevent.dto.TicketApplyRequest;
+import com.shop.shoppingevent.publisher.PointEventPublisher;
 import com.shop.shoppingevent.service.EventParticipationValidator;
 import com.shop.shoppingevent.service.EventService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,8 +24,10 @@ import java.time.format.DateTimeFormatter;
 public class EventController {
 
     private static final int EVENT_TICKET_LIMIT = 1000;
+    private static final int EVENT_POINT = 10000;
 
     private final EventService eventService;
+    private final PointEventPublisher pointEventPublisher;
     private final KafkaTemplate<String, EventPointMessage> kafkaTemplate;
     private final EventParticipationValidator participationValidator;
 
@@ -44,7 +48,7 @@ public class EventController {
 
     // 이벤트 참여 처리
     @PostMapping("/ticket/apply")
-    public ResponseEntity<EventApplyResponse> applyEvent(@RequestBody TicketApplyRequest ticketApplyRequest) {
+    public ResponseEntity<EventApplyResponse> applyEvent(@Validated @RequestBody TicketApplyRequest ticketApplyRequest) {
         log.info("Request to apply event: {}", ticketApplyRequest);
 
         Long userId = ticketApplyRequest.getUserId();
@@ -56,9 +60,10 @@ public class EventController {
 
         log.info("User joined the event: {}", ticketApplyRequest);
         eventService.saveParticipation(ticketApplyRequest.getUserId());
-        kafkaTemplate.send("event-point-topic", new EventPointMessage(ticketApplyRequest.getUserId(), ticketApplyRequest.getReason(), 10000, 1));
+        pointEventPublisher.publishEventPoint(ticketApplyRequest, EVENT_POINT);
         return ResponseEntity.ok(new EventApplyResponse(true, "이벤트 참여에 성공했습니다."));
     }
+
 
     private static ResponseEntity<EventApplyResponse> buildEventApplyErrorResponse(EventJoinResult eventJoinResult) {
         return switch (eventJoinResult) {

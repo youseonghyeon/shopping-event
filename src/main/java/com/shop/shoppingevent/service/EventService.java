@@ -23,10 +23,18 @@ public class EventService {
 
     @Transactional
     public void saveParticipation(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
-        boolean given = false;
-        String sql = "INSERT INTO participation (user_id, create_datetime, given) VALUES (?, ?, ?)";
-        eventJdbcTemplate.update(sql, userId, now, given);
+        try {
+            LocalDateTime now = LocalDateTime.now();
+            boolean given = false;
+            String sql = "INSERT INTO participation (user_id, create_datetime, given) VALUES (?, ?, ?)";
+            eventJdbcTemplate.update(sql, userId, now, given);
+        } catch (Exception e) {
+            log.error("userId: {} not saved to participation table", userId);
+            log.error("Error while saving participation", e);
+            // TODO 복구 처리 또는 @Retryable 재시도 후 실패 시 Exception 처리
+
+            throw new RuntimeException(e);
+        }
     }
 
     public int countParticipation() {
