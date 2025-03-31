@@ -10,7 +10,7 @@ public enum EventJoinResult {
 
     private final String message;
 
-    private EventJoinResult(String message) {
+    EventJoinResult(String message) {
         this.message = message;
     }
 

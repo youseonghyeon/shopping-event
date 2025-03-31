@@ -1,5 +1,5 @@
 # Shopping Event
-### 기간: 2025-03-01 ~
+### 기간: 2025-03-01 ~ 2025-03-30
 
 **Shopping Event**는 RESTful API 및 배치 서비스로
 Spring Boot, jdbc, Redis, Kafka 등의 기술을 활용하여 이벤트 처리를 제공합니다.
